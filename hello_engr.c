@@ -8,15 +8,17 @@
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 
-#define VIDEO_FILE "media/onyx1.mov" 
+#define FRAME_WIDTH  80
+#define FRAME_HEIGHT 40
+
+#define VIDEO_FILE "media/output.mp4" 
 
 void display_video(const char *filename) 
 {
     avformat_network_init();
     AVFormatContext *format_ctx = NULL;
     
-    // if (avformat_open_input(&format_ctx, filename, NULL, NULL) != 0) 
-    if (avformat_open_input(&format_ctx, "/dev/video0", NULL, NULL) != 0) 
+    if (avformat_open_input(&format_ctx, filename, NULL, NULL) != 0) 
     {
         fprintf(stderr, "Could not open video file\n");
         return;
@@ -62,7 +64,7 @@ void display_video(const char *filename)
 
     struct SwsContext *sws_ctx = sws_getContext(
         codec_ctx->width, codec_ctx->height, codec_ctx->pix_fmt,
-        80, 40, AV_PIX_FMT_RGB24, SWS_BILINEAR, NULL, NULL, NULL
+        FRAME_WIDTH, FRAME_HEIGHT, AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL
     );
 
     caca_canvas_t *canvas = caca_create_canvas(80, 40);
@@ -80,6 +82,8 @@ void display_video(const char *filename)
     uint8_t *buffer = (uint8_t *)av_malloc(num_bytes);
     av_image_fill_arrays(rgb_frame->data, rgb_frame->linesize, buffer, AV_PIX_FMT_RGB24, 80, 40, 1);
 
+    caca_dither_t *dither = caca_create_dither(24, 80, 40, 80 * 3, 0xFF0000, 0x00FF00, 0x0000FF, 0);
+
     while (av_read_frame(format_ctx, &packet) >= 0) 
     {
         if (packet.stream_index == video_stream_index) 
@@ -91,11 +95,9 @@ void display_video(const char *filename)
                     sws_scale(sws_ctx, (const uint8_t *const *)frame->data, frame->linesize, 0,
                               codec_ctx->height, rgb_frame->data, rgb_frame->linesize);
 
-                    caca_dither_t *dither = caca_create_dither(24, 80, 40, 80 * 3, 0xFF0000, 0x00FF00, 0x0000FF, 0);
                     caca_dither_bitmap(canvas, 0, 0, 80, 40, dither, rgb_frame->data[0]);
                     caca_refresh_display(display);
                     usleep(1000000 / 24); // Adjust for frame rate
-                    caca_free_dither(dither);
                 }
             }
         }
@@ -108,7 +110,9 @@ void display_video(const char *filename)
     sws_freeContext(sws_ctx);
     avcodec_free_context(&codec_ctx);
     avformat_close_input(&format_ctx);
+    caca_free_dither(dither);
     caca_free_display(display);
+    caca_free_canvas(canvas);
 }
 
 
