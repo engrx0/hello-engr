@@ -1,124 +1,76 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
+#include <ncurses.h>
 
-#include <caca.h>
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-
-#define FRAME_WIDTH  80
-#define FRAME_HEIGHT 40
-
-#define VIDEO_FILE "media/output.mp4" 
-
-void display_video(const char *filename) 
+void print_border(int height, int width, int delay)
 {
-    avformat_network_init();
-    AVFormatContext *format_ctx = NULL;
+    addch(ACS_ULCORNER);
+    napms(delay);
+    refresh();
+
+    // draw top horizontal 
+    for (int i = 0; i < width - 1; i++)
+    {
+        addch(ACS_HLINE);
+        napms(delay);
+        refresh();
+    }
+
+    addch(ACS_URCORNER);
+    refresh();
+    napms(delay);
+
+    // draw right vertical 
+    for (int i = 1; i < height; i++)
+    {
+        move(i, width);
+        addch(ACS_VLINE);
+        refresh();
+        napms(delay);
+    }
     
-    if (avformat_open_input(&format_ctx, filename, NULL, NULL) != 0) 
+    move(height, width);
+    addch(ACS_LRCORNER);
+    refresh();
+    napms(delay);
+
+    // draw bottom horizontal 
+    for (int i = width - 1; i > 0; i--)
     {
-        fprintf(stderr, "Could not open video file\n");
-        return;
+        move(height, i);
+        addch(ACS_HLINE);
+        refresh();
+        napms(delay);
     }
 
-    if (avformat_find_stream_info(format_ctx, NULL) < 0) 
+    move(height, 0);
+    addch(ACS_LLCORNER);
+    refresh();
+    napms(delay);
+
+    // draw left vertical 
+    for (int i = height - 1; i > 0; i--)
     {
-        fprintf(stderr, "Could not find stream info\n");
-        avformat_close_input(&format_ctx);
-        return;
+        move(i, 0);
+        addch(ACS_VLINE);
+        refresh();
+        napms(delay);
     }
 
-    int video_stream_index = -1;
-    for (unsigned i = 0; i < format_ctx->nb_streams; i++) {
-        if (format_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-            video_stream_index = i;
-            break;
-        }
-    }
-    if (video_stream_index == -1) {
-        fprintf(stderr, "Could not find a video stream\n");
-        avformat_close_input(&format_ctx);
-        return;
-    }
-
-    AVCodecParameters *codec_params = format_ctx->streams[video_stream_index]->codecpar;
-    const AVCodec *codec = avcodec_find_decoder(codec_params->codec_id);
-    if (!codec) {
-        fprintf(stderr, "Unsupported codec\n");
-        avformat_close_input(&format_ctx);
-        return;
-    }
-
-    AVCodecContext *codec_ctx = avcodec_alloc_context3(codec);
-    avcodec_parameters_to_context(codec_ctx, codec_params);
-    if (avcodec_open2(codec_ctx, codec, NULL) < 0) 
-    {
-        fprintf(stderr, "Could not open codec\n");
-        avcodec_free_context(&codec_ctx);
-        avformat_close_input(&format_ctx);
-        return;
-    }
-
-    struct SwsContext *sws_ctx = sws_getContext(
-        codec_ctx->width, codec_ctx->height, codec_ctx->pix_fmt,
-        FRAME_WIDTH, FRAME_HEIGHT, AV_PIX_FMT_RGB24, SWS_BICUBIC, NULL, NULL, NULL
-    );
-
-    caca_canvas_t *canvas = caca_create_canvas(80, 40);
-    caca_display_t *display = caca_create_display(canvas);
-    if (!display) 
-    {
-        fprintf(stderr, "Could not create caca display\n");
-        return;
-    }
-
-    AVPacket packet;
-    AVFrame *frame = av_frame_alloc();
-    AVFrame *rgb_frame = av_frame_alloc();
-    int num_bytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, 80, 40, 1);
-    uint8_t *buffer = (uint8_t *)av_malloc(num_bytes);
-    av_image_fill_arrays(rgb_frame->data, rgb_frame->linesize, buffer, AV_PIX_FMT_RGB24, 80, 40, 1);
-
-    caca_dither_t *dither = caca_create_dither(24, 80, 40, 80 * 3, 0xFF0000, 0x00FF00, 0x0000FF, 0);
-
-    while (av_read_frame(format_ctx, &packet) >= 0) 
-    {
-        if (packet.stream_index == video_stream_index) 
-        {
-            if (avcodec_send_packet(codec_ctx, &packet) == 0) 
-            {
-                while (avcodec_receive_frame(codec_ctx, frame) == 0) 
-                {
-                    sws_scale(sws_ctx, (const uint8_t *const *)frame->data, frame->linesize, 0,
-                              codec_ctx->height, rgb_frame->data, rgb_frame->linesize);
-
-                    caca_dither_bitmap(canvas, 0, 0, 80, 40, dither, rgb_frame->data[0]);
-                    caca_refresh_display(display);
-                    usleep(1000000 / 24); // Adjust for frame rate
-                }
-            }
-        }
-        av_packet_unref(&packet);
-    }
-
-    av_free(buffer);
-    av_frame_free(&frame);
-    av_frame_free(&rgb_frame);
-    sws_freeContext(sws_ctx);
-    avcodec_free_context(&codec_ctx);
-    avformat_close_input(&format_ctx);
-    caca_free_dither(dither);
-    caca_free_display(display);
-    caca_free_canvas(canvas);
 }
 
-
-int main() 
+int main()
 {
-    display_video(VIDEO_FILE);
-    printf("\033[1;31mhello engr\033[0m\n");
+    initscr();
+    curs_set(0);
+    // cbreak();
+    // noecho();
+
+    int main_height = 24;
+    int main_width = 80;
+    print_border(main_height, main_width, 10);
+
+    getch();
+
+    endwin(); // close ncurses
+
     return 0;
 }
