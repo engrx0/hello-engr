@@ -2,6 +2,27 @@
 
 void print_border(int start_row, int start_col, int height, int width, int delay);
 
+void print_text(int start_row, int start_col, const char * const msg, const int delay)
+{
+    move(start_row, start_col);
+
+    const char *m;
+    m = msg;
+
+    int i = 0;
+    while(*m)
+    {
+        if (i++ % 2 == 0)
+            addch(A_BOLD | A_REVERSE | *m);
+        else  
+            addch(*m);
+
+        m++;
+        refresh();
+        napms(delay); // delay 100 ms
+    }
+}
+
 struct window_t
 {
     int xo;
@@ -20,8 +41,18 @@ int main()
     int main_height = 24;
     int main_width = 80;
     print_border(0, 0, main_height, main_width, 10);
-    print_border(2, 10, 4, 60, 10);
-    print_border(8, 5, 15, 70, 10);
+
+    int message_yo = 2;
+    int message_xo = 10;
+    print_border(message_yo, message_xo, 4, 60, 10);
+    
+    int ascii_yo = 8;
+    int ascii_xo = 5;
+    print_border(ascii_yo, ascii_xo, 15, 70, 10);
+
+    char text_hello[] = "hello engr";
+    int hello_delay_ms = 200; 
+    print_text(message_yo + 1 , message_xo + 1, text_hello, hello_delay_ms);
 
 
     getch();
