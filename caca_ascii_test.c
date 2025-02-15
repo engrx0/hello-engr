@@ -111,6 +111,9 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     const uint32_t top_right_corner = 0x2557;
     const uint32_t bottom_left_corner = 0x255A;
     const uint32_t bottom_right_corner = 0x255D;
+    const uint32_t vertical_line = 0x2551;
+    const uint32_t horizontal_line = 0x2550;
+    
 
     caca_put_char(canvas, xo, yo, top_left_corner);
     caca_refresh_display(display);
@@ -119,7 +122,7 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     // top horizontal line
     for(int col = xo + 1; col < xf; col++)
     {
-        caca_put_char(canvas, col, yo, '-');
+        caca_put_char(canvas, col, yo, horizontal_line);
         caca_refresh_display(display);
         usleep(BORDER_DELAY);
     }
@@ -131,7 +134,7 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     // right vertical line
     for(int row = yo + 1; row < yf; row++)
     {
-        caca_put_char(canvas, xf, row, '|');
+        caca_put_char(canvas, xf, row, vertical_line);
         caca_refresh_display(display);
         usleep(BORDER_DELAY);
     }
@@ -143,7 +146,7 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     // bottom horizontal line
     for(int col = xf - 1; col > xo; col--)
     {
-        caca_put_char(canvas, col, yf, '-');
+        caca_put_char(canvas, col, yf, horizontal_line);
         caca_refresh_display(display);
         usleep(BORDER_DELAY);
     }
@@ -155,7 +158,7 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     // left vertical line
     for(int row = yf - 1; row > yo; row--)
     {
-        caca_put_char(canvas, xo, row, '|');
+        caca_put_char(canvas, xo, row, vertical_line);
         caca_refresh_display(display);
         usleep(BORDER_DELAY);
     }
