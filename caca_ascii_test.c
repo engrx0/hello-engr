@@ -71,12 +71,14 @@ int main()
     print_border(cv, dp, ascii_xo, ascii_yo, ascii_width, ascii_height);
 
     /* print header message */
-    print_text(cv, dp, header_xo + 1, header_yo + 1, "hello engr");
+    char message[] = "hello engr";
+    int header_message_xo = (header_xo + (header_width / 2)) - strlen(message); 
+    print_text(cv, dp, header_xo + (header_width / 2), header_yo + 1, message);
 
     // Display video as ASCII using libcaca’s dither
     // Note that we pass the dimensions for the entire canvas, but you can
     // adapt the code if you want to “blit” into a smaller subregion instead.
-    display_video_ascii(cv, dp, "media/input_square.mov", ascii_xo, ascii_yo, ascii_width, ascii_height);
+    // display_video_ascii(cv, dp, "media/input_square.mov", ascii_xo, ascii_yo, ascii_width, ascii_height);
 
     /* blok until key press */
     caca_event_t ev;
@@ -103,9 +105,14 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
 {
     int xf = xo + width;
     int yf = yo + height;
+    int corner = '*';
 
-    // top-left corner
-    caca_put_char(canvas, xo, yo, '+');
+    const uint32_t top_left_corner = 0x2554;
+    const uint32_t top_right_corner = 0x2557;
+    const uint32_t bottom_left_corner = 0x255A;
+    const uint32_t bottom_right_corner = 0x255D;
+
+    caca_put_char(canvas, xo, yo, top_left_corner);
     caca_refresh_display(display);
     usleep(BORDER_DELAY);
 
@@ -117,8 +124,7 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
         usleep(BORDER_DELAY);
     }
 
-    // top-right corner
-    caca_put_char(canvas, xf, yo, '+');
+    caca_put_char(canvas, xf, yo, top_right_corner);
     caca_refresh_display(display);
     usleep(BORDER_DELAY);
 
@@ -130,8 +136,7 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
         usleep(BORDER_DELAY);
     }
 
-    // bottom-right corner
-    caca_put_char(canvas, xf, yf, '+');
+    caca_put_char(canvas, xf, yf, bottom_right_corner);
     caca_refresh_display(display);
     usleep(BORDER_DELAY);
 
@@ -143,8 +148,7 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
         usleep(BORDER_DELAY);
     }
 
-    // bottom-left corner
-    caca_put_char(canvas, xo, yf, '+');
+    caca_put_char(canvas, xo, yf, bottom_left_corner);
     caca_refresh_display(display);
     usleep(BORDER_DELAY);
 
@@ -160,21 +164,13 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
 
 static void print_text(caca_canvas_t *canvas, caca_display_t *display, int xo, int yo, const char *msg)
 {
+    caca_set_color_ansi(canvas, CACA_GREEN, CACA_BLACK);
+    caca_set_attr(canvas, CACA_BLINK | CACA_BOLD);
+    
     int i = 0;
     while(msg[i] != '\0')
     {
-        // toggle bold
-        if(i % 2 == 0) 
-        {
-            caca_set_color_ansi(canvas, CACA_LIGHTGREEN, CACA_BLACK);
-            caca_put_char(canvas, xo + i, yo, msg[i]);
-        }
-        else 
-        {
-            caca_set_color_ansi(canvas, CACA_WHITE, CACA_BLACK);
-            caca_put_char(canvas, xo + i, yo, msg[i]);
-        }
-
+        caca_put_char(canvas, xo + i, yo, msg[i]);
         caca_refresh_display(display);
         usleep(TEXT_DELAY);
         i++;
