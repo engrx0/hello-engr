@@ -13,6 +13,73 @@
 #define BORDER_DELAY 10000
 #define TEXT_DELAY   100000
 
+#define LETTER_HEIGHT 5
+#define LETTER_WIDTH  5
+
+static const char *h[LETTER_HEIGHT] = {
+    "11   ",
+    "11   ",
+    "11111",
+    "11 11",
+    "11 11"
+};
+
+static const char *e[LETTER_HEIGHT] = {
+    " 1111",
+    "1   1",
+    "11111",
+    "1    ",
+    "11111"
+};
+
+static const char *l[LETTER_HEIGHT] = {
+    "11 11",
+    "11 11",
+    "11 11",
+    "11 11",
+    "11 11"
+};
+
+static const char *o[LETTER_HEIGHT] = {
+    " 111 ",
+    "11 11",
+    "11 11",
+    "11 11",
+    " 111 "
+};
+
+static const char *space[LETTER_HEIGHT] = {
+    "     ",
+    "     ",
+    "     ",
+    "     ",
+    "     "
+};
+
+static const char *n[LETTER_HEIGHT] = {
+    "11111",
+    "1   1",
+    "1   1",
+    "1   1",
+    "1   1"
+};
+
+static const char *g[LETTER_HEIGHT] = {
+    "1111 ",
+    "1   1",
+    "11111",
+    "    1",
+    "11111"
+};
+
+static const char *r[LETTER_HEIGHT] = {
+    " 1111",
+    "11  1",
+    "11   ",
+    "11   ",
+    "11   "
+};
+
 // #define VIDEO_FILE "media/input.mov" 
 #define VIDEO_FILE "media/input_square.mov" 
 
@@ -21,6 +88,10 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
 
 static void print_text(caca_canvas_t *canvas, caca_display_t *display,
         int xo, int yo, const char *msg);
+
+static const char **get_letter_pattern(char c);
+
+static void draw_big_letter(caca_canvas_t *cv, caca_display_t *display, int top, int left, char letter);
 
 static void display_video_ascii(caca_canvas_t *canvas, caca_display_t *display,
             const char *filename, int col_start, int row_start, int canvas_width, int canvas_height);
@@ -60,7 +131,7 @@ int main()
     int header_xo       = 10;
     int header_yo       = 2;
     int header_width    = 60;
-    int header_height   = 4;
+    int header_height   = 6;
     print_border(cv, dp, header_xo, header_yo, header_width, header_height);
 
     /* draw ascii video border */
@@ -71,14 +142,11 @@ int main()
     print_border(cv, dp, ascii_xo, ascii_yo, ascii_width, ascii_height);
 
     /* print header message */
-    char message[] = "hello engr";
+    const char *message = "helo engr"; 
     int header_message_xo = (header_xo + (header_width / 2)) - strlen(message); 
-    print_text(cv, dp, header_xo + (header_width / 2), header_yo + 1, message);
+    print_text(cv, dp, header_xo, header_yo, message);
 
-    // Display video as ASCII using libcaca’s dither
-    // Note that we pass the dimensions for the entire canvas, but you can
-    // adapt the code if you want to “blit” into a smaller subregion instead.
-    // display_video_ascii(cv, dp, "media/input_square.mov", ascii_xo, ascii_yo, ascii_width, ascii_height);
+    display_video_ascii(cv, dp, "media/input_square.mov", ascii_xo, ascii_yo, ascii_width, ascii_height);
 
     /* blok until key press */
     caca_event_t ev;
@@ -108,6 +176,10 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     int corner = '*';
 
     const uint32_t top_left_corner = 0x2554;
+    // const uint32_t top_left_corner = ;
+
+    
+ 
     const uint32_t top_right_corner = 0x2557;
     const uint32_t bottom_left_corner = 0x255A;
     const uint32_t bottom_right_corner = 0x255D;
@@ -165,21 +237,54 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
 }
 
 
-static void print_text(caca_canvas_t *canvas, caca_display_t *display, int xo, int yo, const char *msg)
+static const char **get_letter_pattern(char c)
 {
-    caca_set_color_ansi(canvas, CACA_GREEN, CACA_BLACK);
-    caca_set_attr(canvas, CACA_BLINK | CACA_BOLD);
-    
-    int i = 0;
-    while(msg[i] != '\0')
+    switch(c)
     {
-        caca_put_char(canvas, xo + i, yo, msg[i]);
+        case 'h': return h;
+        case 'e': return e;
+        case 'l': return l;
+        case 'o': return o;
+        case ' ': return space;
+        case 'n': return n;
+        case 'g': return g;
+        case 'r': return r;
+        default:  return space;
+    }
+}
+
+static void draw_big_letter(caca_canvas_t *cv, caca_display_t *display, int top, int left, char letter)
+{
+    const char **pattern = get_letter_pattern(letter);
+
+    caca_set_color_ansi(cv, CACA_GREEN, CACA_BLACK);
+    caca_set_attr(cv, CACA_BLINK | CACA_BOLD);
+
+    for(int row = 0; row < LETTER_HEIGHT; row++)
+    {
+        const char *line = pattern[row];
+        for(int col = 0; col < LETTER_WIDTH; col++)
+        {
+            if(line[col] == '1')
+                caca_put_char(cv, left + col, top + row, 0x2588); // convert to unicode codepoint U+2588
+            else
+                caca_put_char(cv, left + col, top + row, ' ');
+        }
         caca_refresh_display(display);
         usleep(TEXT_DELAY);
-        i++;
     }
 
-    caca_set_color_ansi(canvas, CACA_WHITE, CACA_BLACK);
+    caca_set_color_ansi(cv, CACA_WHITE, CACA_BLACK);
+}
+
+static void print_text(caca_canvas_t *canvas, caca_display_t *display, int xo, int yo, const char *msg)
+{
+
+    for(int i = 0; msg[i] != '\0'; i++)
+    {
+        draw_big_letter(canvas, display, yo + 1, xo + 1, msg[i]);
+        xo += (LETTER_WIDTH + 1);
+    }
 }
 
 /** decodes video frames (using FFmpeg) and uses libcaca’s dithering to
