@@ -120,32 +120,35 @@ int main()
     caca_set_display_title(dp, "hello engr with libcaca");
     caca_clear_canvas(cv);
 
+    caca_set_color_ansi(cv, CACA_MAGENTA, CACA_BLACK);
+
     /* draw main border */
     int outer_border_xo = 0;
     int outer_border_yo = 0;
     print_border(cv, dp, outer_border_xo, outer_border_yo, canvas_width, canvas_height);
-
+    
     /* draw header border */
     int header_xo       = 10;
     int header_yo       = 1;
     int header_width    = 60;
     int header_height   = 6;
     print_border(cv, dp, header_xo, header_yo, header_width, header_height);
-
+    
     /* draw ascii video border */
     int ascii_xo = 2;
     int ascii_yo = 8;
     int ascii_width = 76;
     int ascii_height = 28;
     print_border(cv, dp, ascii_xo, ascii_yo, ascii_width, ascii_height);
-
+    
+    caca_set_color_ansi(cv, CACA_GREEN, CACA_BLACK);
     /* print header message */
     const char *message = "helo engr"; 
-    int header_message_xo = (header_xo + (header_width / 2)) - strlen(message); 
-    print_text(cv, dp, header_xo, header_yo, message);
+    int len = strlen(message) * LETTER_WIDTH;
+    int offset = (header_xo + (header_width - len) / 2) - 3;    
+    print_text(cv, dp, offset, header_yo, message);
 
     const char filename[] = { "media/input.mov" };
-
     display_video_ascii(cv, dp, filename, ascii_xo + 1, ascii_yo + 1, ascii_width - 1, ascii_height - 1);
 
     /* blok until key press */
@@ -171,7 +174,6 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
 {
     int xf = xo + width;
     int yf = yo + height;
-    int corner = '*';
 
     const uint32_t top_left_corner = 0x2554;  
     const uint32_t top_right_corner = 0x2557;
@@ -180,7 +182,6 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     const uint32_t vertical_line = 0x2551;
     const uint32_t horizontal_line = 0x2550;
     
-
     caca_put_char(canvas, xo, yo, top_left_corner);
     caca_refresh_display(display);
     usleep(BORDER_DELAY);
@@ -251,9 +252,6 @@ static void draw_big_letter(caca_canvas_t *cv, caca_display_t *display, int top,
 {
     const char **pattern = get_letter_pattern(letter);
 
-    // caca_set_color_ansi(cv, CACA_GREEN, CACA_BLACK);
-    // caca_set_attr(cv, CACA_BOLD);
-
     for(int row = 0; row < LETTER_HEIGHT; row++)
     {
         const char *line = pattern[row];
@@ -264,19 +262,16 @@ static void draw_big_letter(caca_canvas_t *cv, caca_display_t *display, int top,
             else
                 caca_put_char(cv, left + col, top + row, ' ');
         }
-        caca_refresh_display(display);
-        usleep(TEXT_DELAY);
     }
-
-    // caca_set_color_ansi(cv, CACA_WHITE, CACA_BLACK);
+    caca_refresh_display(display);
+    usleep(TEXT_DELAY);
 }
 
 static void print_text(caca_canvas_t *canvas, caca_display_t *display, int xo, int yo, const char *msg)
 {
-
     for(int i = 0; msg[i] != '\0'; i++)
     {
-        draw_big_letter(canvas, display, yo + 1, xo + 1, msg[i]);
+        draw_big_letter(canvas, display, yo + 1, xo, msg[i]);
         xo += (LETTER_WIDTH + 1);
     }
 }
