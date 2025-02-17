@@ -80,9 +80,6 @@ static const char *r[LETTER_HEIGHT] = {
     "11   "
 };
 
-// #define VIDEO_FILE "media/input.mov" 
-#define VIDEO_FILE "media/input_square.mov" 
-
 static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     int xo, int yo, int width, int height);
 
@@ -100,9 +97,10 @@ int main()
 {
 
     avformat_network_init();
+    av_log_set_level(AV_LOG_ERROR);
 
     int canvas_width = 80;
-    int canvas_height = 30;
+    int canvas_height = 37;
 
     caca_canvas_t *cv = caca_create_canvas(canvas_width, canvas_height);
     if(!cv) 
@@ -129,16 +127,16 @@ int main()
 
     /* draw header border */
     int header_xo       = 10;
-    int header_yo       = 2;
+    int header_yo       = 1;
     int header_width    = 60;
     int header_height   = 6;
     print_border(cv, dp, header_xo, header_yo, header_width, header_height);
 
     /* draw ascii video border */
-    int ascii_xo = 5;
+    int ascii_xo = 2;
     int ascii_yo = 8;
-    int ascii_width = 70;
-    int ascii_height = 20;
+    int ascii_width = 76;
+    int ascii_height = 28;
     print_border(cv, dp, ascii_xo, ascii_yo, ascii_width, ascii_height);
 
     /* print header message */
@@ -146,7 +144,9 @@ int main()
     int header_message_xo = (header_xo + (header_width / 2)) - strlen(message); 
     print_text(cv, dp, header_xo, header_yo, message);
 
-    display_video_ascii(cv, dp, "media/input_square.mov", ascii_xo, ascii_yo, ascii_width, ascii_height);
+    const char filename[] = { "media/input.mov" };
+
+    display_video_ascii(cv, dp, filename, ascii_xo + 1, ascii_yo + 1, ascii_width - 1, ascii_height - 1);
 
     /* blok until key press */
     caca_event_t ev;
@@ -163,8 +163,6 @@ int main()
     caca_free_display(dp);
     caca_free_canvas(cv);
     avformat_network_deinit();
-
-    printf("\033[1;31mhello engr\033[0m\n");
     return 0;
 }
 
@@ -175,11 +173,7 @@ static void print_border(caca_canvas_t *canvas, caca_display_t *display,
     int yf = yo + height;
     int corner = '*';
 
-    const uint32_t top_left_corner = 0x2554;
-    // const uint32_t top_left_corner = ;
-
-    
- 
+    const uint32_t top_left_corner = 0x2554;  
     const uint32_t top_right_corner = 0x2557;
     const uint32_t bottom_left_corner = 0x255A;
     const uint32_t bottom_right_corner = 0x255D;
@@ -257,8 +251,8 @@ static void draw_big_letter(caca_canvas_t *cv, caca_display_t *display, int top,
 {
     const char **pattern = get_letter_pattern(letter);
 
-    caca_set_color_ansi(cv, CACA_GREEN, CACA_BLACK);
-    caca_set_attr(cv, CACA_BLINK | CACA_BOLD);
+    // caca_set_color_ansi(cv, CACA_GREEN, CACA_BLACK);
+    // caca_set_attr(cv, CACA_BOLD);
 
     for(int row = 0; row < LETTER_HEIGHT; row++)
     {
@@ -274,7 +268,7 @@ static void draw_big_letter(caca_canvas_t *cv, caca_display_t *display, int top,
         usleep(TEXT_DELAY);
     }
 
-    caca_set_color_ansi(cv, CACA_WHITE, CACA_BLACK);
+    // caca_set_color_ansi(cv, CACA_WHITE, CACA_BLACK);
 }
 
 static void print_text(caca_canvas_t *canvas, caca_display_t *display, int xo, int yo, const char *msg)
