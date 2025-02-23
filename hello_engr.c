@@ -120,7 +120,7 @@ int main()
     caca_set_display_title(dp, "hello engr with libcaca");
     caca_clear_canvas(cv);
 
-    caca_set_color_ansi(cv, CACA_MAGENTA, CACA_BLACK);
+    caca_set_color_ansi(cv, CACA_GREEN, CACA_BLACK);
 
     /* draw main border */
     int outer_border_xo = 0;
@@ -141,7 +141,7 @@ int main()
     int ascii_height = 28;
     print_border(cv, dp, ascii_xo, ascii_yo, ascii_width, ascii_height);
     
-    caca_set_color_ansi(cv, CACA_GREEN, CACA_BLACK);
+    caca_set_color_ansi(cv, CACA_RED, CACA_LIGHTGRAY);
     /* print header message */
     const char *message = "helo engr"; 
     int len = strlen(message) * LETTER_WIDTH;
@@ -342,7 +342,7 @@ static void display_video_ascii(caca_canvas_t *canvas, caca_display_t *display,
                         codec_ctx->pix_fmt,
                         canvas_width, canvas_height,
                         AV_PIX_FMT_RGBA,
-                        SWS_BICUBIC, NULL, NULL, NULL);
+                        SWS_FAST_BILINEAR, NULL, NULL, NULL);
     if(!sws_ctx)
     {
         caca_put_str(canvas, 0, 0, "Could not initialize sws context");
