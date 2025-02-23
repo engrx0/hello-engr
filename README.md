@@ -9,6 +9,6 @@ sudo apt-get install \
     libswscale-dev \
 
 ## run
-./hello_engr.sh
+./run.sh
 
 ![anon](https://github.com/user-attachments/assets/320cb28f-c790-491a-b5df-8e5d10e1147a)
