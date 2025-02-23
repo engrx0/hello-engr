@@ -10,7 +10,7 @@
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
 
-#define BORDER_DELAY 6000
+#define BORDER_DELAY 5500
 #define TEXT_DELAY   100000
 
 #define LETTER_HEIGHT 5
